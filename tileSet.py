@@ -7,7 +7,6 @@ class TileSet:
         # Initialize everything from file
         with open(file) as f:
             self.dim   = tuple([int(x) for x in f.readline().split(",")])
-            self.start = tuple([int(x) for x in f.readline().split(",")])
 
             # Mark checkpoints until -1 is read
             self.checkpoints = []
@@ -16,14 +15,21 @@ class TileSet:
                 if '-1' in line: break
                 self.checkpoints.append(tuple([int(x) for x in line]))
 
+            # First checkpoint is the start, last is the finish
+            self.start  = self.checkpoints[0]
+            self.finish = self.checkpoints[len(self.checkpoints) - 1]
+
             # Initialize all grid slots to 0
             self.grid  = [[0 for x in xrange(self.dim[0])] for x in xrange(self.dim[1])]
 
-            # Read the grid data from file
+            # Read the grid data from file. If is 3, mark as checkpoint as well
             tiles = f.read().split('\n')
             for i in xrange(self.dim[0]):
                 for j in xrange(self.dim[1]):
-                    self.grid[i][j] = tile.Tile((i*64, j*64), (64, 64), int(tiles[j][i]))
+                    if int(tiles[j][i]) < 3:
+                        self.grid[i][j] = tile.Tile((i*64, j*64), (64, 64), int(tiles[j][i]))
+                    else:
+                        self.grid[i][j] = tile.Tile((i*64, j*64), (64, 64), int(tiles[j][i]), self.checkpoints.index((i,j)))
 
             # Find initial shortest path
             self.route = self.findShortestPath()

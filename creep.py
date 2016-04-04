@@ -8,18 +8,20 @@ class Creep:
         pygame.image.load('textures/ufo.jpg')
     ]
 
-    def __init__(self, spawnPoint, destination, health, speed, dimensions, creepType, tileSet, path):
-        self.x           = spawnPoint[0]
-        self.y           = spawnPoint[1]
-        self.destination = destination
+    def __init__(self, health, speed, dimensions, creepType, tileSet):
+        self.x           = tileSet.start[0] * 64
+        self.y           = tileSet.start[1] * 64
         self.health      = health
         self.speed       = speed
         self.dim         = dimensions
         self.image       = self.creepImage[creepType]
 
         self.stepsTaken  = 0
-        self.path        = path
+        self.path        = tileSet.route
+        self.isAlive     = True
 
+    def die(self):
+        self.isAlive = False
 
     def draw(self, screen):
         screen.blit(self.image, (self.x, self.y))
@@ -27,6 +29,7 @@ class Creep:
     # Moves in the direction specified by 'path'
     def move(self, seconds, tileSet):
         if self.stepsTaken == len(self.path):
+            self.die()
             return
 
         dest      = self.path[self.stepsTaken][0]

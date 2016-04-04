@@ -4,8 +4,8 @@ import tileSet
 import creep
 
 # GLOBALS
-SCREEN_HEIGHT = 512
-SCREEN_WIDTH  = 512
+SCREEN_WIDTH  = 704
+SCREEN_HEIGHT = 704
 
 # PYGAME STUFF
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -15,7 +15,7 @@ clock  = pygame.time.Clock()
 map = tileSet.TileSet('map.txt')
 
 # Creep Testing
-creep = creep.Creep((0, 0), (7,0), 100, 100, (64, 64), 0, map, map.findShortestPath())
+creep = creep.Creep(100, 200, (64, 64), 0, map)
 
 while (True):
     seconds = clock.tick(128) / 1000.0
@@ -25,9 +25,12 @@ while (True):
             pygame.quit()
             sys.exit()
 
-    creep.move(seconds, map)
+
 
     map.draw(screen)
-    creep.draw(screen)
+
+    if creep.isAlive:
+        creep.move(seconds, map)
+        creep.draw(screen)
 
     pygame.display.flip()
