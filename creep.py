@@ -4,54 +4,67 @@ import tileSet
 import tile
 
 class Creep:
+    # Image Array
     creepImage = [
         pygame.image.load('textures/ufo.jpg')
     ]
 
     def __init__(self, health, speed, dimensions, creepType, tileSet):
-        self.x           = tileSet.start[0] * 64
-        self.y           = tileSet.start[1] * 64
-        self.health      = health
-        self.speed       = speed
-        self.dim         = dimensions
-        self.image       = self.creepImage[creepType]
+        # Status Info
+        self.health     = health
+        self.speed      = speed
+        self.alive      = True
 
-        self.stepsTaken  = 0
-        self.path        = tileSet.route
-        self.isAlive     = True
+        # Position & Info
+        self.position   = (tileSet.start[0] * 64, tileSet.start[1] * 64)
+        self.dimensions = dimensions
+        self.image      = self.creepImage[creepType]
 
-    def die(self):
-        self.isAlive = False
+        # Pathing Info
+        self.stepsTaken = 0
+        self.path       = tileSet.route
 
     def draw(self, screen):
-        screen.blit(self.image, (self.x, self.y))
+        screen.blit(self.image, self.position)
 
-    # Moves in the direction specified by 'path'
     def move(self, seconds, tileSet):
         if self.stepsTaken == len(self.path):
-            self.die()
-            return
+            self.alive = False
+        else:
+            # Extract destination and direction to move in from the path
+            dest      = self.path[self.stepsTaken][0]
+            direction = self.path[self.stepsTaken][1]
 
-        dest      = self.path[self.stepsTaken][0]
-        direction = self.path[self.stepsTaken][1]
+            # Pull the X and Y coordinates from the destination indices
+            destX     = tileSet.grid[dest[0]][dest[1]].position[0]
+            destY     = tileSet.grid[dest[0]][dest[1]].position[1]
 
-        destX = tileSet.grid[dest[0]][dest[1]].position[0]
-        destY = tileSet.grid[dest[0]][dest[1]].position[1]
+            # Self's X and Y coordinates
+            x         = self.position[0]
+            y         = self.position[1]
 
-        if abs(self.x - destX) < 3 and abs(self.y - destY) < 3:
-            self.stepsTaken += 1
+            # Move in the specified direction.
+            # If we go past our destination, set ourselves to our destination
+            # and change direction
+            if   direction == 0: # Left
+                x -= self.speed * seconds
+                if x < destX:
+                    x = destX
+                    self.stepsTaken += 1
+            elif direction == 1: # Right
+                x += self.speed * seconds
+                if x > destX:
+                    x = destX
+                    self.stepsTaken += 1
+            elif direction == 2: # Up
+                y -= self.speed * seconds
+                if y < destY:
+                    y = destY
+                    self.stepsTaken += 1
+            elif direction == 3: # Down
+                y += self.speed * seconds
+                if y > destY:
+                    y = destY
+                    self.stepsTaken += 1
 
-        if direction == 0:
-            self.x -= self.speed * seconds
-        elif direction == 1:
-            self.x += self.speed * seconds
-        elif direction == 2:
-            self.y -= self.speed * seconds
-        elif direction == 3:
-            self.y += self.speed * seconds
-
-    def getPositionIndex(self):
-        i = int(self.x // 64)
-        j = int(self.y // 64)
-
-        return (i, j)
+            self.position = (x, y)

@@ -3,31 +3,31 @@ import sys
 import time
 
 class TileType:
-    tileTypeEnum = [
-        [pygame.image.load('textures/dirt.jpg'), True, False],
-        [pygame.image.load('textures/grass.jpg'), False, True],
-        [pygame.image.load('textures/water.jpg'), False, False]
-    ]
+    tileTypeEnum = {
+        'D' : [pygame.image.load('textures/dirt.jpg'), True, False],
+        'G' : [pygame.image.load('textures/grass.jpg'), False, True],
+        'W' : [pygame.image.load('textures/water.jpg'), False, False]
+    }
 
-    tileCheckpointImages = [
-        pygame.image.load('textures/Start.jpg'),
-        pygame.image.load('textures/One.jpg'),
-        pygame.image.load('textures/Two.jpg'),
-        pygame.image.load('textures/Three.jpg'),
-        pygame.image.load('textures/Four.jpg'),
-        pygame.image.load('textures/Five.jpg'),
-        pygame.image.load('textures/Six.jpg'),
-        pygame.image.load('textures/Finish.jpg')
-    ]
+    tileCheckpointImages = {
+        'S' : pygame.image.load('textures/Start.jpg'),
+        '1' : pygame.image.load('textures/One.jpg'),
+        '2' : pygame.image.load('textures/Two.jpg'),
+        '3' : pygame.image.load('textures/Three.jpg'),
+        '4' : pygame.image.load('textures/Four.jpg'),
+        '5' : pygame.image.load('textures/Five.jpg'),
+        '6' : pygame.image.load('textures/Six.jpg'),
+        'F' : pygame.image.load('textures/Finish.jpg')
+    }
 
     def __init__(self, tileType, checkNumber = None):
-        if tileType < 3:
+        if checkNumber == None:
             self.image        = self.tileTypeEnum[tileType][0]
             self.pathable     = self.tileTypeEnum[tileType][1]
             self.buildable    = self.tileTypeEnum[tileType][2]
             self.isCheckpoint = False
         else:
-            self.image           = self.tileTypeEnum[0][0]
+            self.image           = self.tileTypeEnum['D'][0]
             self.checkpointImage = self.tileCheckpointImages[checkNumber]
             self.isCheckpoint    = True
             self.pathable        = True

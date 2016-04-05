@@ -1,71 +1,72 @@
 import tile
 import pathFinding
+import csv
+import time
+import pygame
 
 class TileSet:
     def __init__(self, file):
-
         # Initialize everything from file
         with open(file) as f:
-            self.dim   = tuple([int(x) for x in f.readline().split(",")])
-
-            # Mark checkpoints until -1 is read
-            self.checkpoints = []
-            while True:
-                line = f.readline().split(",")
-                if '-1' in line: break
-                self.checkpoints.append(tuple([int(x) for x in line]))
-
-            # First checkpoint is the start, last is the finish
-            self.start  = self.checkpoints[0]
-            self.finish = self.checkpoints[len(self.checkpoints) - 1]
+            reader = csv.reader(f)
+            self.dimensions   = tuple(map(int, reader.next()))
 
             # Initialize all grid slots to 0
-            self.grid  = [[0 for x in xrange(self.dim[0])] for x in xrange(self.dim[1])]
+            self.grid  = [[0 for x in xrange(self.dimensions[0])] for x in xrange(self.dimensions[1])]
 
-            # Read the grid data from file. If is 3, mark as checkpoint as well
-            tiles = f.read().split('\n')
-            for i in xrange(self.dim[0]):
-                for j in xrange(self.dim[1]):
-                    if int(tiles[j][i]) < 3:
-                        self.grid[i][j] = tile.Tile((i*64, j*64), (64, 64), int(tiles[j][i]))
+            # Iterate through the tilemap.
+            # j refers to X coord, i refers to Y coord
+            self.checkpoints = []
+            for j in xrange(self.dimensions[0]):
+                line = reader.next()
+                for i in xrange(self.dimensions[1]):
+                    if 'C' not in line[i] :
+                        self.grid[i][j] = tile.Tile((i*64, j*64), (64, 64), line[i])
                     else:
-                        self.grid[i][j] = tile.Tile((i*64, j*64), (64, 64), int(tiles[j][i]), self.checkpoints.index((i,j)))
+                        if   line[i][1] == 'S':
+                            self.start  = (i, j)
+                        elif line[i][1] == 'F':
+                            self.finish = (i, j)
+                        else:
+                            self.checkpoints.insert(0, [(i, j), int(line[i][1])])
+
+                        self.grid[i][j] = tile.Tile((i*64, j*64), (64, 64), 'D', line[i][1])
+
+            self.checkpoints = [x[0] for x in sorted(self.checkpoints, key = lambda x: x[1])]
+            self.checkpoints.insert(0, self.start)
+            self.checkpoints.append(self.finish)
 
             # Find initial shortest path
             self.route = self.findShortestPath()
 
-    # Draw every tile in the grid
+    # Draws the grid of tiles to the screen
     def draw(self, screen):
-        for i in xrange(self.dim[0]):
-            for j in xrange(self.dim[1]):
+        for i in xrange(self.dimensions[0]):
+            for j in xrange(self.dimensions[1]):
                 self.grid[i][j].draw(screen)
 
-    # Checks to see if a position is in the bounds of our grid
-    def inBounds(self, pos):
-        (x, y) = pos
-        return 0 <= x < self.dim[0] and 0 <= y < self.dim[1]
+    # Check if passed coordinates is in bounds of the grid
+    def inBounds(self, coordinates):
+        return 0 <= coordinates[0] < self.dimensions[0] and \
+               0 <= coordinates[1] < self.dimensions[1]
 
-    # Checks to see if a position is pathable
-    def pathable(self, pos):
-        return self.grid[pos[0]][pos[1]].tileType.pathable
+    # Check if passed coordinates contains a pathable tile
+    def pathable(self, coordinates):
+        return self.grid[coordinates[0]][coordinates[1]].tileType.pathable
 
-    # Finds the pathable neighbors of a position
-    def neighbors(self, pos):
-        (x, y) = pos
-        results = [(x+1, y), (x, y-1), (x-1, y), (x, y+1)]
-        if (x + y) % 2 == 0: results.reverse() # aesthetics
+    # Finds the pathable neighbor tiles of a position
+    # Return a list of tile coordinates
+    def neighbors(self, coordinates):
+        (i, j) = coordinates
+        results = [(i+1, j), (i, j-1), (i-1, j), (i, j+1)]
         results = filter(self.inBounds, results)
         results = filter(self.pathable, results)
         return results
 
-    # Used aStar to find shortest path from start, through all checkpoints, to finish
+    # Use aStar to find shortest path through all checkpoints
     def findShortestPath(self):
-        path = [x for x in self.checkpoints]
-        path.insert(0, self.start)
+        path = []
+        for i in xrange(len(self.checkpoints) - 1):
+            path.extend(pathFinding.aStar(self, self.checkpoints[i], self.checkpoints[i+1]))
 
-        ret = []
-        for i in xrange(len(path) - 1):
-            print i
-            ret.extend(pathFinding.aStar(self, path[i], path[i+1]))
-
-        return ret
+        return path

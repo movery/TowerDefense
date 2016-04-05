@@ -12,7 +12,7 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock  = pygame.time.Clock()
 
 #INITIALIZE TILESET
-map = tileSet.TileSet('map.txt')
+map = tileSet.TileSet('map.csv')
 
 # Creep Testing
 creep = creep.Creep(100, 200, (64, 64), 0, map)
@@ -29,7 +29,7 @@ while (True):
 
     map.draw(screen)
 
-    if creep.isAlive:
+    if creep.alive:
         creep.move(seconds, map)
         creep.draw(screen)
 
